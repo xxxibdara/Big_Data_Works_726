@@ -1,0 +1,17 @@
+CONSISTENCY ONE; ok
+INSERT INTO test (id, data) VALUES (6, 'hexadecimal'); ok
+SELECT * FROM test; ok
+CONSISTENCY ALL;
+INSERT INTO test (id, data) VALUES (7, 'sevenish'); no
+INSERT INTO test (id, data) VALUES (9, 'neun'); ok
+SELECT * FROM test; no 
+SELECT * FROM test WHERE id=1; no
+SELECT * FROM test WHERE id=2; ok
+SELECT * FROM test WHERE id=3; ok 
+SELECT * FROM test WHERE id=4;ok
+SELECT * FROM test WHERE id=5;ok
+Id=6 no
+Id = 7 no
+Id = 9 ok
+
+For consistency all, I need all copies of data that are all consistent. Even there is a node down, as long as, for example, replication factor = 2, nodes = 3, the node3 was down but if all replications were stored in the other two, it's ok we access it.

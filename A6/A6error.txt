@@ -1,0 +1,109 @@
+1. ValueError: Cannot convert column into bool: please use '&' for 'and', '|' for 'or', '~' for 'not' when building DataFrame boolean expressions.
+
+Trace:
+py4j.Py4JException: Method and([class java.lang.String]) does not exist
+
+filtered = wiki_with_hour.where(wiki_with_hour['language'] == 'en').where((wiki_with_hour['title'] != "Main Page") & (~ wiki_with_hour['title'].startswith("Special:")))
+
+While using multiple conditions, each condition needs to be separated because of operator precedence.
+
+Delimiter cannot be empty:
+    wikipedia = spark.read.csv(inputs, sep = '', schema = wikipedia_schema).withColumn('filename', functions.input_file_name())
+
+sep = '' should be sep = ' ', there is an enter inside; 
+
+Buffer.max...
+Join the bigger set to a small set, don't do the reverse
+
+With join
+== Physical Plan ==
+AdaptiveSparkPlan isFinalPlan=false
++- Sort [hour#16 ASC NULLS FIRST, title#1 ASC NULLS FIRST], true, 0
+   +- Exchange rangepartitioning(hour#16 ASC NULLS FIRST, title#1 ASC NULLS FIRST, 200), ENSURE_REQUIREMENTS, [id=#267]
+      +- Project [hour#16, title#1, views#2]
+         +- BroadcastHashJoin [hour#16, views#2], [hour#68, views#61], Inner, BuildRight, false
+            :- Filter (isnotnull(hour#16) AND isnotnull(views#2))
+            :  +- InMemoryTableScan [title#1, views#2, hour#16], [isnotnull(hour#16), isnotnull(views#2)]
+            :        +- InMemoryRelation [language#0, title#1, views#2, bytes#3, filename#8, hour#16], StorageLevel(disk, memory, deserialized, 1 replicas)
+            :              +- *(2) Project [language#0, title#1, views#2, bytes#3, filename#8, pythonUDF0#23 AS hour#16]
+            :                 +- BatchEvalPython [path_to_hour(filename#8)#15], [pythonUDF0#23]
+            :                    +- *(1) Filter ((isnotnull(language#0) AND isnotnull(title#1)) AND (((language#0 = en) AND NOT (title#1 = Main Page)) AND NOT StartsWith(title#1, Special:)))
+            :                       +- *(1) Project [language#0, title#1, views#2, bytes#3, input_file_name() AS filename#8]
+            :                          +- FileScan csv [language#0,title#1,views#2,bytes#3] Batched: false, DataFilters: [], Format: CSV, Location: InMemoryFileIndex(1 paths)[hdfs://controller.local:54310/courses/732/pagecounts-3], PartitionFilters: [], PushedFilters: [], ReadSchema: struct<language:string,title:string,views:int,bytes:int>
+            +- BroadcastExchange HashedRelationBroadcastMode(List(input[0, string, true], input[1, int, false]),false), [id=#263]
+               +- Filter isnotnull(views#61)
+                  +- HashAggregate(keys=[hour#68], functions=[max(views#66)])
+                     +- Exchange hashpartitioning(hour#68, 200), ENSURE_REQUIREMENTS, [id=#259]
+                        +- HashAggregate(keys=[hour#68], functions=[partial_max(views#66)])
+                           +- Filter isnotnull(hour#68)
+                              +- InMemoryTableScan [views#66, hour#68], [isnotnull(hour#68)]
+                                    +- InMemoryRelation [language#64, title#65, views#66, bytes#67, filename#8, hour#68], StorageLevel(disk, memory, deserialized, 1 replicas)
+                                          +- *(2) Project [language#0, title#1, views#2, bytes#3, filename#8, pythonUDF0#23 AS hour#16]
+                                             +- BatchEvalPython [path_to_hour(filename#8)#15], [pythonUDF0#23]
+                                                +- *(1) Filter ((isnotnull(language#0) AND isnotnull(title#1)) AND (((language#0 = en) AND NOT (title#1 = Main Page)) AND NOT StartsWith(title#1, Special:)))
+                                                   +- *(1) Project [language#0, title#1, views#2, bytes#3, input_file_name() AS filename#8]
+                                                      +- FileScan csv [language#0,title#1,views#2,bytes#3] Batched: false, DataFilters: [], Format: CSV, Location: InMemoryFileIndex(1 paths)[hdfs://controller.local:54310/courses/732/pagecounts-3], PartitionFilters: [], PushedFilters: [], ReadSchema: struct<language:string,title:string,views:int,bytes:int>
+
+
+== Physical Plan ==
+AdaptiveSparkPlan isFinalPlan=false
++- Sort [hour#16 ASC NULLS FIRST, title#1 ASC NULLS FIRST], true, 0
+   +- Exchange rangepartitioning(hour#16 ASC NULLS FIRST, title#1 ASC NULLS FIRST, 200), ENSURE_REQUIREMENTS, [id=#267]
+      +- Project [hour#16, title#1, views#2]
+         +- BroadcastHashJoin [hour#16, views#2], [hour#68, views#61], Inner, BuildRight, false
+            :- Filter (isnotnull(hour#16) AND isnotnull(views#2))
+            :  +- InMemoryTableScan [title#1, views#2, hour#16], [isnotnull(hour#16), isnotnull(views#2)]
+            :        +- InMemoryRelation [language#0, title#1, views#2, bytes#3, filename#8, hour#16], StorageLevel(disk, memory, deserialized, 1 replicas)
+            :              +- *(2) Project [language#0, title#1, views#2, bytes#3, filename#8, pythonUDF0#23 AS hour#16]
+            :                 +- BatchEvalPython [path_to_hour(filename#8)#15], [pythonUDF0#23]
+            :                    +- *(1) Filter ((isnotnull(language#0) AND isnotnull(title#1)) AND (((language#0 = en) AND NOT (title#1 = Main Page)) AND NOT StartsWith(title#1, Special:)))
+            :                       +- *(1) Project [language#0, title#1, views#2, bytes#3, input_file_name() AS filename#8]
+            :                          +- FileScan csv [language#0,title#1,views#2,bytes#3] Batched: false, DataFilters: [], Format: CSV, Location: InMemoryFileIndex(1 paths)[hdfs://controller.local:54310/courses/732/pagecounts-3], PartitionFilters: [], PushedFilters: [], ReadSchema: struct<language:string,title:string,views:int,bytes:int>
+            +- BroadcastExchange HashedRelationBroadcastMode(List(input[0, string, true], input[1, int, false]),false), [id=#263]
+               +- Filter isnotnull(views#61)
+                  +- HashAggregate(keys=[hour#68], functions=[max(views#66)])
+                     +- Exchange hashpartitioning(hour#68, 200), ENSURE_REQUIREMENTS, [id=#259]
+                        +- HashAggregate(keys=[hour#68], functions=[partial_max(views#66)])
+                           +- Filter isnotnull(hour#68)
+                              +- InMemoryTableScan [views#66, hour#68], [isnotnull(hour#68)]
+                                    +- InMemoryRelation [language#64, title#65, views#66, bytes#67, filename#8, hour#68], StorageLevel(disk, memory, deserialized, 1 replicas)
+                                          +- *(2) Project [language#0, title#1, views#2, bytes#3, filename#8, pythonUDF0#23 AS hour#16]
+                                             +- BatchEvalPython [path_to_hour(filename#8)#15], [pythonUDF0#23]
+                                                +- *(1) Filter ((isnotnull(language#0) AND isnotnull(title#1)) AND (((language#0 = en) AND NOT (title#1 = Main Page)) AND NOT StartsWith(title#1, Special:)))
+                                                   +- *(1) Project [language#0, title#1, views#2, bytes#3, input_file_name() AS filename#8]
+                                                      +- FileScan csv [language#0,title#1,views#2,bytes#3] Batched: false, DataFilters: [], Format: CSV, Location: InMemoryFileIndex(1 paths)[hdfs://controller.local:54310/courses/732/pagecounts-3], PartitionFilters: [], PushedFilters: [], ReadSchema: struct<language:string,title:string,views:int,bytes:int>
+
+
+
+Without join
+== Physical Plan ==
+AdaptiveSparkPlan isFinalPlan=false
++- Sort [hour#16 ASC NULLS FIRST, title#65 ASC NULLS FIRST], true, 0
+   +- Exchange rangepartitioning(hour#16 ASC NULLS FIRST, title#65 ASC NULLS FIRST, 200), ENSURE_REQUIREMENTS, [id=#349]
+      +- Project [hour#16, title#65, views#61]
+         +- SortMergeJoin [hour#16, views#61], [hour#68, views#66], Inner
+            :- Sort [hour#16 ASC NULLS FIRST, views#61 ASC NULLS FIRST], false, 0
+            :  +- Exchange hashpartitioning(hour#16, views#61, 200), ENSURE_REQUIREMENTS, [id=#343]
+            :     +- Filter isnotnull(views#61)
+            :        +- HashAggregate(keys=[hour#16], functions=[max(views#2)])
+            :           +- Exchange hashpartitioning(hour#16, 200), ENSURE_REQUIREMENTS, [id=#337]
+            :              +- HashAggregate(keys=[hour#16], functions=[partial_max(views#2)])
+            :                 +- Filter isnotnull(hour#16)
+            :                    +- InMemoryTableScan [views#2, hour#16], [isnotnull(hour#16)]
+            :                          +- InMemoryRelation [language#0, title#1, views#2, bytes#3, filename#8, hour#16], StorageLevel(disk, memory, deserialized, 1 replicas)
+            :                                +- *(2) Project [language#0, title#1, views#2, bytes#3, filename#8, pythonUDF0#23 AS hour#16]
+            :                                   +- BatchEvalPython [path_to_hour(filename#8)#15], [pythonUDF0#23]
+            :                                      +- *(1) Filter ((isnotnull(language#0) AND isnotnull(title#1)) AND (((language#0 = en) AND NOT (title#1 = Main Page)) AND NOT StartsWith(title#1, Special:)))
+            :                                         +- *(1) Project [language#0, title#1, views#2, bytes#3, input_file_name() AS filename#8]
+            :                                            +- FileScan csv [language#0,title#1,views#2,bytes#3] Batched: false, DataFilters: [], Format: CSV, Location: InMemoryFileIndex(1 paths)[hdfs://controller.local:54310/courses/732/pagecounts-3], PartitionFilters: [], PushedFilters: [], ReadSchema: struct<language:string,title:string,views:int,bytes:int>
+            +- Sort [hour#68 ASC NULLS FIRST, views#66 ASC NULLS FIRST], false, 0
+               +- Exchange hashpartitioning(hour#68, views#66, 200), ENSURE_REQUIREMENTS, [id=#342]
+                  +- Filter (isnotnull(hour#68) AND isnotnull(views#66))
+                     +- InMemoryTableScan [title#65, views#66, hour#68], [isnotnull(hour#68), isnotnull(views#66)]
+                           +- InMemoryRelation [language#64, title#65, views#66, bytes#67, filename#8, hour#68], StorageLevel(disk, memory, deserialized, 1 replicas)
+                                 +- *(2) Project [language#0, title#1, views#2, bytes#3, filename#8, pythonUDF0#23 AS hour#16]
+                                    +- BatchEvalPython [path_to_hour(filename#8)#15], [pythonUDF0#23]
+                                       +- *(1) Filter ((isnotnull(language#0) AND isnotnull(title#1)) AND (((language#0 = en) AND NOT (title#1 = Main Page)) AND NOT StartsWith(title#1, Special:)))
+                                          +- *(1) Project [language#0, title#1, views#2, bytes#3, input_file_name() AS filename#8]
+                                             +- FileScan csv [language#0,title#1,views#2,bytes#3] Batched: false, DataFilters: [], Format: CSV, Location: InMemoryFileIndex(1 paths)[hdfs://controller.local:54310/courses/732/pagecounts-3], PartitionFilters: [], PushedFilters: [], ReadSchema: struct<language:string,title:string,views:int,bytes:int>
+

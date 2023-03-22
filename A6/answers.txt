@@ -1,0 +1,45 @@
+1. In the Reddit averages execution plan, which fields were loaded? How was the average computed (and was a combiner-like step done)?
+	Answers:
+		JSON files were scanned in the first stage, and the fields [score] and [subreddit] were loaded into memory. Then, the average was calculated using these steps: 
+	1) It aggregated on the subreddit and generated partial averages of the score for each key within each partition before the shuffle (partial_avg implemented as a combiner). 
+	2) Then, it rearranged the data such that equivalent subreddits were together (shuffle). 
+	3) To get the aggregate average scores across each subreddit, it used the HashAggregate() function (a reducer-like step)
+		
+	
+2. What was the running time for your Reddit averages implementations in the five scenarios described above? How much difference did Python implementation make (PyPy vs the default CPython)? Why was it large for RDDs but not for DataFrames?
+	Answer: 
+		Below is a list of each scenario's running time. When comparing the time spent on DataFrames, PyPy outperformed CPython by 17 seconds. PyPy was also significantly faster than Python. When it came to RDDs, cutting down on that time by 49 seconds. 
+		This represents a huge change for RDDs because, according to the course notes, every component of a Python RDD was a serialized Python object; in fact, PyPy dramatically sped up the execution of Python. PyPy, therefore, enhanced the RDDs execution.
+		Python code only sends descriptions of the calculations to the JVM for DataFrames since they include Scala objects, which implies all DataFrame operations must take place in the JVM rather than in the Python language. As a result, there is little difference between using PyPy or CPython to run DataFrames.
+
+# MapReduce
+real	2m34.326s
+
+# Spark DataFrames (with CPython)
+real	1m33.337s
+
+# Spark RDDs (with CPython)
+real	2m8.982s
+
+# Spark DataFrames (with PyPy)
+real	1m16.996s
+
+# Spark RDDs (with PyPy)
+real	1m19.507s
+
+3. How much of a difference did the broadcast hint make to the Wikipedia popular code's running time (and on what data set)?
+	Answer: 
+		When we gave the broadcast hint, there was about 1 min faster than that without the hint. 
+	1) with hint and pagecounts-3
+		1m24.368s
+	2) without hint and pagecounts-3
+		2m22.041s
+4. How did the Wikipedia popular execution plan differ with and without the broadcast hint?
+	Answer:
+		The difference in the execution plan is that with the broadcast hint, the physical execution plan used BroadcastHashJoin to join two tables; while without the broadcast hint, it used SortMergeJoin to join two tables. 
+		And with the broadcast hint, there was a step called BroadcastExchange HashedRelationBroadcastMode. Without the broadcast hint, in the physical plan, there was only a Sort method instead of BroadcastExchange. 
+
+5. For the weather data question, did you prefer writing the “DataFrames + Python methods” style, or the “temp tables + SQL syntax” style form solving the problem? Which do you think produces more readable code?
+	Answer: 
+		I actually prefer working in the "DataFrames + Python methods" manner because the "temp tables + SQL syntax" approach is redundant and requires a lot of time-consuming rewriting of the SQL format. 
+		However, sometimes the "temp tables + SQL syntax" technique is more readable when writing the simpler logic in "temp tables + SQL syntax" style, it is much more clear than "DataFrames + Python methods"; while, in another way, the complex logic in "DataFrames + Python methods" is more readable.

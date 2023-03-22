@@ -1,0 +1,27 @@
+AttributeError: 'DataFrame' object has no attribute 'sum'
+
+groupBy(): Groups the DataFrame using the specified columns, so we can run aggregation on them. See GroupedData for all the available aggregate functions.
+
+In GroupedData you can find a set of methods for aggregations on a DataFrame, such as sum(), avg() ,mean().
+
+>>> from pyspark.sql.functions import sum
+>>> a = [(12,"Ireland"),(5,"Thailand")]
+>>> df = spark.createDataFrame(a,["count","country"])
+>>> df.show()
++-----+--------+
+|count| country|
++-----+--------+
+|   12| Ireland|
+|    5|Thailand|
++-----+--------+
+So you have to group your data before applying these functions.
+
+>>> total = df.groupBy().sum()
+>>> total.show()
++----------+
+|sum(count)|
++----------+
+|        17|
++----------+
+
+.collect() used on DataFrame will give a list

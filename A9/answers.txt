@@ -1,0 +1,110 @@
+Question 1: DEBIT OR CREDIT?
+
+a. The people from Ontario tend to put larger purchases on credit card payment. 
+
+b. Query:
+
+SELECT pm.mtype AS payment, avg(p.amount) AS average_amounts
+FROM purchases p 
+     JOIN paymentmethods pm ON pm.pmid = p.pmid
+     JOIN customers c ON p.custid = c.custid
+WHERE c.province = 'ON'
+GROUP BY pm.mtype
+
+Results:
+
+payment  average_amounts
+debit	 101.06
+credit	 131.40
+
+Question 2: DEBIT OR CREDIT?
+
+a. The visitors from outside BC altogether spent the most per transaction. 
+
+b. A SQL statement to create the required view
+
+Query:
+
+CREATE VIEW vancouver_custs AS
+WITH 
+  vprefixes (vp) AS 
+    (SELECT DISTINCT pcprefix FROM greater_vancouver_prefixes)
+SELECT custid, 
+(CASE WHEN vp is not null THEN 1 ELSE 0 END) AS in_vancouver
+FROM  (select custid, substring(postalcode,1, 3) as postc
+       from customers) c left join vprefixes
+       on postc= vp
+
+
+c. A SQL query to support your answer for component a
+
+Query:
+
+With temp as (SELECT (CASE WHEN v.in_vancouver = 0 and c.province = 'BC' THEN true ELSE false END) as From_BC_non_Van, (CASE WHEN v.in_vancouver = 1 THEN true ELSE false END) as From_Van, amount, purchid
+FROM purchases p left join customers c 
+              on p.custid = c.custid
+              left join vancouver_custs v
+              on p.custid = v.custid)
+
+SELECT From_BC_non_Van, From_Van, COUNT(purchid) as Count, 
+AVG(amount) as Average, Median(amount) as Median
+
+FROM temp
+GROUP BY From_BC_non_Van, From_Van
+ORDER BY Median
+
+Results: 
+
+From_BC_non_Van From_Van Count  Average  Median
+	false	true	 10384	86.01	 27.370
+	true	false	 3899	95.16	 30.080
+	false	false	 15717	112.89	 33.270
+
+Q3: WHO SPENDS MORE ON SUSHI?
+
+a. The tourists spend more at restaurants that serve sushi.
+
+b. Query:
+With sushi AS (SELECT amenid FROM amenities 
+               WHERE tags.cuisine ILIKE 'sushi%' AND amenity = 'restaurant')
+               
+SELECT AVG(amount) AS avg, in_vancouver
+FROM purchases p JOIN vancouver_custs v
+USING(custid) JOIN sushi s
+USING(amenid)
+GROUP BY in_vancouver
+ORDER BY in_vancouver
+
+Results:
+avg     in_vancouver
+85.80    0
+77.57    1
+
+Q4: Average purchase per day for the first five days?
+
+a. Please check the results of the query.
+
+b. Query:
+SELECT pdate, AVG(amount) AS avg
+FROM purchases 
+WHERE DATE_PART(day, pdate) <= 5
+GROUP BY pdate
+ORDER BY pdate
+
+Results:
+pdate         avg
+2021-08-01    96.59
+2021-08-02    106.56
+2021-08-03    95.87
+2021-08-04    115.50
+2021-08-05    95.67
+
+c. The bytes/record ratio for RedShift on the 5-day query is 94.06*1024/4703 = 20.48 bytes/record.
+
+d. The bytes/record ratio for Spectrum on the 5-day query is 267396/4703 = 56.86 bytes/record.
+
+e. Compared the statistics for the 5-day and 31-day queries, the bytes/record ratio, I found both of them were 56.86 bytes per record, which means the spectrum scan the whole dataset, whenever how many rows I actually need for in the queries, if the spectrum needs to read row, it has to read the entire rows of the dataset, it is row-oriented; the RedShift only reads the columns required by the queries. 
+
+f. If the dataset is relatively small and we only regularly query a small number of columns, it is well-suited to loading from S3 into RedShift before querying it.
+
+g. Based on observation, when the dataset became bigger, the avg_request_parallelism became larger; then, when we use a significantly big dataset with a bunch of complex queries in a short period of time, we could consider to use Spectrum, since it allows parallelism. 

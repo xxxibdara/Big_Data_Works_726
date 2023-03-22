@@ -1,0 +1,36 @@
+1. What happened when you inserted another row with the same primary key as an existing row?
+	Answer:
+		The previous record was replaced by the new record, i.e. the primary key was still id=2, the data became 'double' instead of 'secondary'.
+
+2. What happened when you query a keyspace with replication factor 1 and one node down? How did it behave with replication factor 2 and a node down?
+	Answer:
+		I ran the 'select * from test;' query to query the keyspace with replication factor 1 and one node down, and I got the NoHostAvailable error. The cause was that one node contained just one copy of the data, and that node was down.
+		When altering the keyspace with replication factor 2 and one node down, the queries worked fine, this is because we have two copies of data, even one node is down, we could still work on the other copy of data.
+
+3. How did the consistency level affect the results with the node up/down?
+	Answer:
+		It depends on which node is up or down, assume replication factor=2 and number of nodes=3:
+		1) For consistency level 1, when one node was down, the queries succeeded as long as one copy of the data was stored in the live nodes; when the node was up, it worked fine. 
+		2) However, for consistency ALL, it worked as long as the rest of the live nodes held the entire replications of data; if one copy in the dead node, it gave an error: Cannot achieve consistency level ALL. CONSISTENCY ALL requires all replications to respond. And it would work successfully with the node turned on.
+
+4. Which of the WHERE id=? values returned successfully with CONSISTENCY ALL when one of the nodes was down? Why do you think some could be returned but not others?
+	Answer: 
+		WHERE id=2,3,4,5 values returned successfully with CONSISTENCY ALL, the reason is we have 3 nodes and the other live nodes stored all the copies of these data, and those data that cannot successfully returned were stored one of their copies in the down node, which are the data with id=1, 6, 7, 9. 
+
+
+5. What was the CREATE TABLE statement you used for the nasalogs table? What was the primary key you choose, and why?
+	Answer: 
+		I used PRIMARY KEY (host, id) to create the primary key since we used the host as a partition key to sum the values of bytes and count the path numbers in assignment 7. Then, only one key is not enough because we have many records based on the same host, we used UUID to create the unique id for each record within each host.
+CREATE TABLE nasalogs (
+  host TEXT,
+  datetime TIMESTAMP,
+  path TEXT,
+  bytes INT,
+  -- possibly more fields for the primary key?
+  id UUID,
+  PRIMARY KEY (host, id)
+);
+
+6. What was the CQL query you used (or tried) to get the total number of bytes?
+	Answer: I used SELECT sum(bytes) FROM nasalogs; to get the total number of bytes.
+		

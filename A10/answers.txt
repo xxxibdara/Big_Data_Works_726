@@ -1,0 +1,48 @@
+1. What is your best guess for the slope and intercept of the streaming points being produced?
+	Answer:
+		The best guess for the slope is about 2.767 and the intercept is between -20.9 to -20.3.
+			
+	
+2. Is your streaming program's estimate of the slope and intercept getting better as the program runs? (That is: is the program aggregating all of the data from the start of time, or only those that have arrived since the last output?)
+	Answer: 
+		Yes, since we used outputMode('complete'), the program aggregated all of the data from the start of time, the slope and intercept got better as the program ran. Therefore, more data could give us more information of the dataset and it could conduct a more accurate result.
+
+
+
+3. In the colour classification question, what were your validation scores for the RGB and LAB pipelines?
+	Answer:
+		Validation score for RGB model: 0.6098579782790309
+		Validation score for LAB model: 0.697577276524645
+
+
+4. When predicting the tmax values, did you over-fit the training data (and for which training/validation sets)?
+	Answer:
+		I think there is no overfitting based on the information below.
+	1) without yesterday's temperature:
+	i. Using tmax-1
+		r2 = 0.8755537432923388
+		rmse = 4.240334900950529
+	ii. Using tmax-2
+		r2 = 0.7884857044223472
+		rmse = 5.942244162259651
+		
+	2) with yesterday's temperature:
+	i. Using tmax-1
+		r2 = 0.9078915871217945
+		rmse = 3.589316593530267
+	ii. Using tmax-2
+		r2 = 0.9096647402733843
+		rmse = 3.8430147283269918
+			
+
+5. What were your testing scores for your model with and without the “yesterday's temperature” feature?
+	Answer: 
+		(Based on tmax-1 dataset)
+		Without "yesterday's temperature" feature, the scores were r2 = 0.4615705413345822, rmse = 9.517800946356795; with it, the scores were r2 = 0.8449277950491895, rmse = 5.091190407917012.
+		(Based on tmax-2 dataset)
+		Without "yesterday's temperature" feature, the scores were r2 =0.7768515614862173, rmse = 6.127299900199393; with it, the scores were r2 = 0.9093614001300094, rmse = 3.892323719222298.
+
+6. If you're using a tree-based model, you'll find a .featureImportances property that describes the relative importance of each feature (code commented out in weather_test.py; if not, skip this question). Have a look with and without the “yesterday's temperature” feature: do the results make sense and suggest that your model is making decisions reasonably? With “yesterday's temperature”, is it just predicting “same as yesterday”?
+	Answer:
+		Without yesterday's temperature, Predicted tmax tomorrow: 5.846303514102016; with "yesterday's temperature" feature, the Predicted tmax tomorrow: 12.243734983901803, which is very closer to 12.0. This result is resonable because tomorrow's temperature is related to the yesterday's temperature based on the result of using .featureImportances() and tmax-1, which is about 0.8287907653086407. Also, when we used the tmax-2 as a train set to produce a train model, the score of featureImportance became 0.9146017680577427. But, without "yesterday's temperature" feature, the score went down to 0.4342957399536304. 
+
